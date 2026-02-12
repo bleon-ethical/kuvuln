@@ -21,36 +21,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 2. Secret Detection
+      - name: 2. Secret Detection (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: detect --report-path=kuvuln-report.sarif --report-format=sarif --exit-code=0
+        # Eliminamos 'args' porque esta acción lo maneja internamente o vía config file
 
-      - name: 3. Full Repo Audit (FS & Dependencies)
+      - name: 3. Full Repo Audit (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           format: 'sarif'
-          output: 'trivy-report.sarif'
+          output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: 4. Static Analysis (SAST)
+      - name: 4. Static Analysis (Semgrep)
         uses: semgrep/semgrep-action@v1
-        continue-on-error: true # Permite que el bot termine de subir otros reportes
         with:
           config: >-
             p/security-audit
             p/secrets
             p/kubernetes
-          generateSarif: "1"
+        # Eliminamos 'generateSarif' porque en v1 se activa de otra forma o es automático al detectar entorno GitHub
 
-      - name: 5. Upload Results to Security Tab
-        uses: github/codeql-action/upload-sarif@v3
+      - name: 5. Upload Reports to Security Tab
+        uses: github/codeql-action/upload-sarif@v4  # Actualizado a v4 para evitar el warning de depreciación
         if: always()
         with:
-          sarif_file: '.'
+          # Subimos la carpeta actual; GitHub buscará todos los archivos .sarif generados
+          sarif_file: '.' 
 
       - name: 6. KuVuln Feedback
         if: github.event_name == 'pull_request'
@@ -76,6 +75,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kuvuln-security-report
-          path: |
-            trivy-report.sarif
-            kuvuln-report.sarif
+          path: "*.sarif"
