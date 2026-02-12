@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "bot_name": "KuVuln",
+  "settings": {
+    "fail_on_severity": "HIGH",
+    "scan_targets": {
+      "kubernetes": true,
+      "docker": true,
+      "dependencies": true,
+      "secrets": true,
+      "sast": true
+    },
+    "exclusions": {
+      "directories": ["tests/**", "docs/**", "examples/**"],
+      "vulnerabilities": ["CVE-0000-0000"]
+    }
+  },
+  "notifications": {
+    "github_pr_comments": true,
+    "security_tab_integration": true,
+    "summary_level": "verbose"
+  },
+  "compliance_standards": ["CIS-Benchmark", "NSA-CISA-Hardening"],
+  "advanced": {
+    "deep_history_scan": true,
+    "ignore_unfixed": false,
+    "license_check": true
+  }
+}
