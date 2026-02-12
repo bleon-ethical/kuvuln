@@ -25,13 +25,15 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: detect --report-path=kuvuln-report.sarif --report-format=sarif --exit-code=0
 
       - name: 3. Full Repo Audit (FS & Dependencies)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           format: 'sarif'
-          output: 'kuvuln-report.sarif'
+          output: 'trivy-report.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: 4. Static Analysis (SAST)
@@ -41,12 +43,14 @@ jobs:
             p/security-audit
             p/secrets
             p/kubernetes
+          generateSarif: "1"
 
-      - name: 5. Upload to Security Tab
+      - name: 5. Upload Reports to Security Tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'kuvuln-report.sarif'
+          # Subimos el reporte de Trivy (K8s/Docker/Deps)
+          sarif_file: 'trivy-report.sarif'
 
       - name: 6. KuVuln Feedback
         if: github.event_name == 'pull_request'
@@ -72,4 +76,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kuvuln-security-report
-          path: kuvuln-report.sarif
+          path: |
+            trivy-report.sarif
+            kuvuln-report.sarif
