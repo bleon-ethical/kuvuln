@@ -1,0 +1,9 @@
+# KuVuln Project Owners
+approvers:
+  - bleon-ethical
+reviewers:
+  - bleon-ethical
+labels:
+  - area/security
+  - sig/security
+  - app/kuvuln
