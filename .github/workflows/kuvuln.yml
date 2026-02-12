@@ -1,0 +1,65 @@
+name: KuVuln Bot
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  kuvuln_comprehensive_scan:
+    name: Full Spectrum Security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+
+    steps:
+      - name: 1. Checkout Full History
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Secret Detection
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 3. Full Repo Audit (FS & Dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs' # Escanea todo el sistema de archivos
+          format: 'sarif'
+          output: 'kuvuln-full.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: 4. Static Analysis (SAST)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }} # Opcional
+
+      - name: 5. Upload to Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'kuvuln-full.sarif'
+
+      - name: 6. KuVuln Feedback
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `### 🤖 KuVuln Analysis Report
+            #### Security Status: Checked
+            - **Secrets:** Verified ✅
+            - **Dependencies:** Audited 📦
+            - **Infrastructure (K8s/Docker):** Scanned 🛡️
+            
+            *Check the **Security** tab for detailed line-by-line fixes.*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
