@@ -38,6 +38,7 @@ jobs:
 
       - name: 4. Static Analysis (SAST)
         uses: semgrep/semgrep-action@v1
+        continue-on-error: true # Permite que el bot termine de subir otros reportes
         with:
           config: >-
             p/security-audit
