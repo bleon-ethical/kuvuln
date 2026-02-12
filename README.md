@@ -1,3 +1,5 @@
+# README
+
 **KuVuln** is an automated security bot designed to audit, secure, and monitor your entire repository. From Kubernetes manifests to application dependencies and container images, KuVuln acts as a tireless digital sentry, ensuring that security is never an afterthought.
 
 ---
