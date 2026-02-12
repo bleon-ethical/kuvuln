@@ -29,21 +29,21 @@ jobs:
       - name: 3. Full Repo Audit (FS & Dependencies)
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs' # Escanea todo el sistema de archivos
+          scan-type: 'fs'
           format: 'sarif'
-          output: 'kuvuln-full.sarif'
+          output: 'kuvuln-report.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: 4. Static Analysis (SAST)
         uses: returntocorp/semgrep-action@v1
         with:
-          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }} # Opcional
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
 
       - name: 5. Upload to Security Tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'kuvuln-full.sarif'
+          sarif_file: 'kuvuln-report.sarif'
 
       - name: 6. KuVuln Feedback
         if: github.event_name == 'pull_request'
@@ -63,3 +63,10 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
+
+      - name: 7. Archive Security Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuvuln-security-report
+          path: kuvuln-report.sarif
